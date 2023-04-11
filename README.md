@@ -46,3 +46,5 @@ view-source:https://technext.github.io/tour/?_ga=2.186626473.1272154040.16705384
                     </div>
                 </div>
             </form>
+            
+            https://bootsnipp.com/snippets/7nmOW
