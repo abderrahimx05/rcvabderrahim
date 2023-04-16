@@ -103,3 +103,87 @@ view-source:https://technext.github.io/tour/?_ga=2.186626473.1272154040.16705384
     border: none;
     cursor: pointer;
 }    </style>
+
+
+//log page 
+<?php
+
+namespace App\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Request;
+use App\Entity\Client;
+use App\Entity\Reservation;
+
+class LoginController extends AbstractController
+{
+    #[Route('/login', name: 'app_login')]
+    public function index(): Response
+    {
+        return $this->render('login/index.html.twig', [
+            'controller_name' => 'LoginController',
+        ]);
+    }
+
+    #[Route('/login/check', name: 'app_login_check')]
+    public function check(Request $request)
+    {
+        // récupérer les données envoyées par le formulaire de connexion
+        $email = $request->request->get('becker1');
+        $password = $request->request->get('1234');
+
+        // récupérer le client depuis la base de données en utilisant l'email et le mot de passe
+        $client = $this->getDoctrine()
+            ->getRepository(Client::class)
+            ->findOneBy([
+                'email' => $email,
+                'password' => $password,
+            ]);
+
+        // si le client n'existe pas, afficher un message d'erreur et rediriger vers la page de connexion
+        if (!$client) {
+            return $this->render('login/index.html.twig', [
+                'error' => 'Invalid login credentials',
+            ]);
+        }
+
+        // si le client existe, créer une session pour lui et rediriger vers la page d'accueil
+        $session = $request->getSession();
+        $session->set('user_id', $client->getId());
+
+        return $this->redirectToRoute('home');
+    }
+
+    #[Route('/logout', name: 'app_logout')]
+    public function logout(Request $request)
+    {
+        // supprimer la session de l'utilisateur et rediriger vers la page de connexion
+        $session = $request->getSession();
+        $session->remove('user_id');
+
+        return $this->redirectToRoute('app_login');
+    }
+
+    #[Route('/reservation/{id}', name: 'app_reservation_new')]
+    public function reservation($id): Response
+    {
+        // récupérer le client depuis la base de données en utilisant l'ID
+        $client = $this->getDoctrine()
+            ->getRepository(Client::class)
+            ->find($id);
+
+        // si le client n'existe pas, afficher une erreur 404
+        if (!$client) {
+            throw $this->createNotFoundException('Client not found');
+        }
+
+        // récupérer toutes les réservations du client et les afficher
+        $reservations = $client->getReservations();
+
+        return $this->render('reservation/index.html.twig', [
+            'reservations' => $reservations,
+        ]);
+    }
+}
